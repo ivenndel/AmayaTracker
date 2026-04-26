@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 app.use(express.json());
 
-const BOT_TOKEN = "8607382207:AAExX038hGcX_7bxDoIHoXp1U4-0Z8z0ziM"// set this in your environment
+const BOT_TOKEN = "8607382207:AAH1G-PCPmjPD0fxyRFiPfvgBwTc5iaHnpw"// set this in your environment
 const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
 
 // ─── In-memory database (swap with real DB later) ───────────────────────────
