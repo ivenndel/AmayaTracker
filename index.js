@@ -5,10 +5,21 @@ app.use(express.json());
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
+const RAILWAY_URL = process.env.RAILWAY_PUBLIC_DOMAIN;
 const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
 
 const pendingConfirmations = {};
 
+// ─── Auto-register webhook on startup ────────────────────────────────────────
+async function registerWebhook() {
+  if (!RAILWAY_URL) { console.log("No RAILWAY_PUBLIC_DOMAIN set, skipping webhook registration"); return; }
+  const webhookUrl = `https://${RAILWAY_URL}/webhook`;
+  const res = await fetch(`${TELEGRAM_API}/setWebhook?url=${webhookUrl}`);
+  const data = await res.json();
+  console.log("Webhook registration:", data);
+}
+
+// ─── Supabase helpers ─────────────────────────────────────────────────────────
 async function getStock(product) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/inventory?product=eq.${encodeURIComponent(product)}&select=stock`, {
     headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
@@ -43,6 +54,7 @@ async function createProduct(product) {
   });
 }
 
+// ─── Telegram helper ──────────────────────────────────────────────────────────
 async function sendMessage(chatId, text) {
   await fetch(`${TELEGRAM_API}/sendMessage`, {
     method: "POST",
@@ -51,6 +63,7 @@ async function sendMessage(chatId, text) {
   });
 }
 
+// ─── Webhook handler ──────────────────────────────────────────────────────────
 app.post("/webhook", async (req, res) => {
   res.sendStatus(200);
 
@@ -135,4 +148,7 @@ app.post("/webhook", async (req, res) => {
 app.get("/", (req, res) => res.send("Inventory bot is running ✅"));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  registerWebhook();
+});
